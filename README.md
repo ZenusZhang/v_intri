@@ -1,3 +1,5 @@
+!!! This is a repo completely built by codex and claude code, python file is produced by codex, readme and building repo is done by Claude Code
+
 # V_intri - RVV Intrinsics Visualizer
 
 A powerful tool for visualizing RISC-V Vector (RVV) intrinsic kernels with dependency graphs and liveness analysis.
