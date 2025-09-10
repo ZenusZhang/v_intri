@@ -33,29 +33,24 @@ SAMPLE_TEXT = r"""
                                                                                \
     /* y = sin(r). Implemented using Horner's method. */                       \
     auto r2 = __riscv_vfmul_vv_f32m##lmul(r, r, vl);                           \
-    auto r3 = __riscv_vfmul_vv_f32m##lmul(r2, r, vl);                          \
                                                                               \
     /* Define polynomial coefficients for sin(r)/r ≈ 1 + P(r^2) */            \
-    const float c9 = 0x1.5b2e76p-19f; /* 1/9! */                              \
-    const float c7 = -0x1.9f42eap-13f;/* -1/7! */                              \
-    const float c5 = 0x1.110df4p-7f;  /* 1/5! */                              \
-    const float c3 = -0x1.555548p-3f; /* -1/3! */                              \
+    const float s_c9 = 0x1.5b2e76p-19f; /* 1/9! */                              \
+    const float s_c7 = -0x1.9f42eap-13f;/* -1/7! */                              \
+    const float s_c5 = 0x1.110df4p-7f;  /* 1/5! */                              \
+    const float s_c3 = -0x1.555548p-3f; /* -1/3! */                              \
                                                                               \
     /* Evaluate P(r^2) from the innermost term outwards using FMA */          \
     /* y = C9 */                                                              \
-    auto y = __riscv_vfmv_v_f_f32m##lmul(c9, vl);                              \
-    /* y = y*r2 + C7 */                                                       \
-    auto vc7 = __riscv_vfmv_v_f_f32m##lmul(c7, vl); \
-    y = __riscv_vfmadd_vv_f32m##lmul(y, r2, vc7, vl); \
-    /* y = y*r2 + C5 */                                                       \
-    auto vc5 = __riscv_vfmv_v_f_f32m##lmul(c5, vl); \
-    y = __riscv_vfmadd_vv_f32m##lmul(y, r2, vc5, vl); \
-    /* y = y*r2 + C3 -> Now y holds the full polynomial P(r^2) */             \
-    auto vc3 = __riscv_vfmv_v_f_f32m##lmul(c3, vl); \
-    y = __riscv_vfmadd_vv_f32m##lmul(y, r2, vc3, vl); \
-                                                                              \
-    /* Final result: y = r + r3 * P(r^2) */                                   \
-    y = __riscv_vfmadd_vv_f32m##lmul(y, r3, r, vl);                            \
+  auto y = __riscv_vfmul_vf_f32m##lmul(r2,  s_c9, vl); /* c9 */ \
+  y = __riscv_vfadd_vf_f32m##lmul(y,    s_c7, vl); /* + c7 */ \
+  y = __riscv_vfmul_vv_f32m##lmul(y,    r2, vl); \
+  y = __riscv_vfadd_vf_f32m##lmul(y,     s_c5, vl); /* + c5 */ \
+  y = __riscv_vfmul_vv_f32m##lmul(y,    r2, vl); \
+  y = __riscv_vfadd_vf_f32m##lmul(y,    s_c3, vl); /* + c3 */ \
+                                  \
+ y = __riscv_vfmul_vv_f32m##lmul(y, r, vl); \
+    y = __riscv_vfmadd_vv_f32m##lmul(y, r2, r, vl);                            \
                                                                               \
     /* Apply sign correction based on the quadrant from range reduction */    \
     auto tmp = __riscv_vreinterpret_v_f32m##lmul##_i32m##lmul(y);              \

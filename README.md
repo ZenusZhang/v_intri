@@ -51,11 +51,11 @@ This will generate `graph.svg` showing the dependency graph of the sample kernel
 
 ### Sample Results
 
-The sample kernel demonstrates a complex RVV computation with the following characteristics:
+The sample kernel implements a cosine function using range reduction and polynomial approximation with the following characteristics:
 
 #### Nodes (Time-indexed SSA Variables)
 ```
-Parameters (t=-1): c3, c5, c7, c9, half, n, ni, odd, r, r2, r3, tmp, v, vc3, vc5, vc7, vl, y
+Parameters (t=-1): half, n, ni, odd, r, r2, s_c3, s_c5, s_c7, s_c9, tmp, v, vl, y
 
 Computation:
 t=0:  n_f1
@@ -71,30 +71,25 @@ t=9:  r_f2
 t=10: r_f3
 t=11: r_f4
 t=12: r2_f1
-t=13: r3_f1
-t=14: c9_f1
-t=15: c7_f1
-t=16: c5_f1
-t=17: c3_f1
-t=18: y_f1
-t=19: vc7_f1
-t=20: y_f2
-t=21: vc5_f1
-t=22: y_f3
-t=23: vc3_f1
-t=24: y_f4
-t=25: y_f5
-t=26: tmp_f1
-t=27: tmp_f2
-t=28: return
+t=13: s_c9_f1
+t=14: s_c7_f1
+t=15: s_c5_f1
+t=16: s_c3_f1
+t=17: y_f1
+t=18: y_f2
+t=19: y_f3
+t=20: y_f4
+t=21: y_f5
+t=22: y_f6
+t=23: y_f7
+t=24: y_f8
+t=25: tmp_f1
+t=26: tmp_f2
+t=27: return
 ```
 
 #### Dependency Graph Edges
 ```
-c3_f1 -> vc3_f1
-c5_f1 -> vc5_f1
-c7_f1 -> vc7_f1
-c9_f1 -> y_f1
 half_f1 -> n_f2
 n_f1 -> n_f2
 n_f2 -> ni_f1
@@ -106,29 +101,32 @@ ni_f1 -> n_f3
 ni_f1 -> odd_f1
 odd_f1 -> odd_f2
 odd_f2 -> tmp_f2
-r2_f1 -> r3_f1
-r2_f1 -> y_f2
+r2_f1 -> y_f1
 r2_f1 -> y_f3
-r2_f1 -> y_f4
-r3_f1 -> y_f5
+r2_f1 -> y_f5
+r2_f1 -> y_f8
 r_f1 -> n_f2
 r_f1 -> r_f2
 r_f2 -> r_f3
 r_f3 -> r_f4
 r_f4 -> r2_f1
-r_f4 -> r3_f1
-r_f4 -> y_f5
+r_f4 -> y_f7
+r_f4 -> y_f8
+s_c3_f1 -> y_f6
+s_c5_f1 -> y_f4
+s_c7_f1 -> y_f2
+s_c9_f1 -> y_f1
 tmp_f1 -> tmp_f2
 tmp_f2 -> return
 v -> r_f1
-vc3_f1 -> y_f4
-vc5_f1 -> y_f3
-vc7_f1 -> y_f2
 y_f1 -> y_f2
 y_f2 -> y_f3
 y_f3 -> y_f4
 y_f4 -> y_f5
-y_f5 -> tmp_f1
+y_f5 -> y_f6
+y_f6 -> y_f7
+y_f7 -> y_f8
+y_f8 -> tmp_f1
 ```
 
 #### Liveness Analysis (Register Pressure)
@@ -141,34 +139,34 @@ t=4:  3 alive  -> n_f2, ni_f1, r_f1
 t=5:  3 alive  -> n_f3, ni_f1, r_f1
 t=6:  4 alive  -> n_f3, ni_f1, odd_f1, r_f1
 t=7:  4 alive  -> n_f3, n_f4, odd_f1, r_f1
-t=8:  4 alive  -> n_f4, odd_1, odd_f2, r_f1
+t=8:  4 alive  -> n_f4, odd_f1, odd_f2, r_f1
 t=9:  4 alive  -> n_f4, odd_f2, r_f1, r_f2
 t=10: 4 alive  -> n_f4, odd_f2, r_f2, r_f3
 t=11: 4 alive  -> n_f4, odd_f2, r_f3, r_f4
 t=12: 3 alive  -> odd_f2, r2_f1, r_f4
-t=13: 4 alive  -> odd_f2, r2_f1, r3_f1, r_f4
-t=14: 5 alive  -> c9_f1, odd_f2, r2_f1, r3_f1, r_f4
-t=15: 6 alive  -> c7_f1, c9_f1, odd_f2, r2_f1, r3_f1, r_f4
-t=16: 7 alive  -> c5_f1, c7_f1, c9_f1, odd_f2, r2_f1, r3_f1, r_f4
-t=17: 8 alive  -> c3_f1, c5_f1, c7_f1, c9_f1, odd_f2, r2_f1, r3_f1, r_f4
-t=18: 9 alive  -> c3_f1, c5_f1, c7_f1, c9_f1, odd_f2, r2_f1, r3_f1, r_f4, y_f1
-t=19: 9 alive  -> c3_f1, c5_f1, c7_f1, odd_f2, r2_f1, r3_f1, r_f4, vc7_f1, y_f1
-t=20: 9 alive  -> c3_f1, c5_f1, odd_f2, r2_f1, r3_f1, r_f4, vc7_f1, y_f1, y_f2
-t=21: 8 alive  -> c3_f1, c5_f1, odd_f2, r2_f1, r3_f1, r_f4, vc5_f1, y_f2
-t=22: 8 alive  -> c3_f1, odd_f2, r2_f1, r3_f1, r_f4, vc5_f1, y_f2, y_f3
-t=23: 7 alive  -> c3_f1, odd_f2, r2_f1, r3_f1, r_f4, vc3_f1, y_f3
-t=24: 7 alive  -> odd_f2, r2_f1, r3_f1, r_f4, vc3_f1, y_f3, y_f4
-t=25: 5 alive  -> odd_f2, r3_f1, r_f4, y_f4, y_f5
-t=26: 3 alive  -> odd_f2, tmp_f1, y_f5
-t=27: 3 alive  -> odd_f2, tmp_f1, tmp_f2
-t=28: 2 alive  -> return, tmp_f2
+t=13: 3 alive  -> odd_f2, r2_f1, r_f4
+t=14: 3 alive  -> odd_f2, r2_f1, r_f4
+t=15: 3 alive  -> odd_f2, r2_f1, r_f4
+t=16: 3 alive  -> odd_f2, r2_f1, r_f4
+t=17: 4 alive  -> odd_f2, r2_f1, r_f4, y_f1
+t=18: 5 alive  -> odd_f2, r2_f1, r_f4, y_f1, y_f2
+t=19: 5 alive  -> odd_f2, r2_f1, r_f4, y_f2, y_f3
+t=20: 5 alive  -> odd_f2, r2_f1, r_f4, y_f3, y_f4
+t=21: 5 alive  -> odd_f2, r2_f1, r_f4, y_f4, y_f5
+t=22: 5 alive  -> odd_f2, r2_f1, r_f4, y_f5, y_f6
+t=23: 5 alive  -> odd_f2, r2_f1, r_f4, y_f6, y_f7
+t=24: 5 alive  -> odd_f2, r2_f1, r_f4, y_f7, y_f8
+t=25: 3 alive  -> odd_f2, tmp_f1, y_f8
+t=26: 3 alive  -> odd_f2, tmp_f1, tmp_f2
+t=27: 2 alive  -> return, tmp_f2
 ```
 
 **Key Observations:**
-- **Peak register pressure**: 9 registers at time steps t=17, t=18, t=19, and t=20
-- **Total execution time**: 29 time steps (t=-1 to t=28)
-- **Complex dependency chain**: Demonstrates data flow through multiple computation phases
-- **Efficient register usage**: Shows realistic register pressure patterns for RVV code
+- **Peak register pressure**: 5 registers sustained from t=17 to t=24 during polynomial evaluation
+- **Total execution time**: 29 time steps (t=-1 to t=27)
+- **Efficient register usage**: Steady register pressure during the main computation phase
+- **Clear computation phases**: Range reduction (t=0-12), polynomial setup (t=13-16), evaluation (t=17-24), and finalization (t=25-27)
+- **Scalar constants**: Note that s_c3, s_c5, s_c7, s_c9 are prefixed with `s_` indicating they are treated as scalar constants
 
 ### Sample Visualization
 
