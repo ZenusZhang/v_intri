@@ -168,6 +168,19 @@ t=28: 2 alive  -> return, tmp_f2
 - **Complex dependency chain**: Demonstrates data flow through multiple computation phases
 - **Efficient register usage**: Shows realistic register pressure patterns for RVV code
 
+### Sample Visualization
+
+Here's the generated dependency graph from the sample kernel:
+
+![Sample RVV Dependency Graph](graph.svg)
+
+This graph shows:
+- **Nodes**: Each SSA variable with its time index (`[t=N]`)
+- **Edges**: Data dependencies between variables
+- **Layout**: Time-aligned from left to right (t=0 to t=28)
+- **Colors**: Different node types (parameters, computations, return)
+- **Curved paths**: Minimize edge overlap for better readability
+
 ## Advanced Usage
 
 ### Analyze Your Own Code
